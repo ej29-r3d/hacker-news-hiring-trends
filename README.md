@@ -2,7 +2,7 @@
 
 Analysis of comment counts in Hacker News' two monthly job threads, January 2019 – July 2026. For the first time since the threads began pairing in July 2014, job-seeker comments exceed hiring comments.
 
-**Article:** https://eli-kolesnikov.github.io/hn-hiring-crossover/
+**Article:** https://ej29-r3d.github.io/hn-hiring-crossover/
 
 ## What's here
 
@@ -12,7 +12,7 @@ Analysis of comment counts in Hacker News' two monthly job threads, January 2019
 - `seeker-share.html` — job seekers' share of all thread comments per year, crossing 50% in 2026.
 - `data/monthly-thread-comments.csv` — the counts.
 - `data/fetch.py` — regenerates the CSV from the HN Algolia API (no dependencies). Counts drift as spam gets flagged and the newest thread accumulates, so re-run before citing.
-- `core/`, `themes/`, `composables/` — chart infrastructure from my [marketing analytics visualization library](https://github.com/eli-kolesnikov/marketing_analytics_visualization). D3 v7, zero build step, every chart is one self-contained HTML file. Append `?theme=T01`..`T20` to any chart URL to restyle it.
+- `core/`, `themes/`, `composables/` — chart infrastructure from my [marketing analytics visualization library](https://github.com/ej29-r3d/marketing_analytics_visualization). D3 v7, zero build step, every chart is one self-contained HTML file. Append `?theme=T01`..`T20` to any chart URL to restyle it.
 
 ## Method
 
