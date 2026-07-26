@@ -6,7 +6,8 @@ Analysis of comment counts in Hacker News' two monthly job threads, January 2019
 
 ## What's here
 
-- `index.html` — the article, three interactive charts embedded.
+- `article.md` — **the article text. Edit this file to change any copy**, then push; `index.html` renders it. Structure is positional: the `#` heading is the title, the first paragraph is the deck, the second is the byline, everything after the `---` rule is the footer. Charts embed via placeholder lines like `{{chart hiring-chart.html?embed=1&title=hide 640}}` (path + initial height). Preview locally with `python3 -m http.server` — markdown loading needs HTTP, not `file://`.
+- `index.html` — thin renderer for `article.md` (client-side, via marked). The page `<title>` and meta description live here — update them too if the headline changes.
 - `hiring-chart.html` — main chart: both series monthly, annotated with rate, layoff, and AI events. Hover any month for its counts and that month's events.
 - `avg-by-year.html` — January–July monthly averages per year.
 - `seeker-share.html` — job seekers' share of all thread comments per year, crossing 50% in 2026.

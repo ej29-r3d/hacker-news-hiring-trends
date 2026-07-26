@@ -16,8 +16,11 @@
     line-height: 1.55;
   }
   .page { max-width: 1080px; margin: 0 auto; padding: 48px 20px 64px; }
-  .text { max-width: 800px; margin: 0 auto; }
-  h1 {
+
+  /* The article body is rendered from article.md — styling is positional:
+     h1, then deck (first paragraph), then byline (second paragraph);
+     everything after the --- rule is the footer. */
+  .page h1 {
     font-size: clamp(26px, 5vw, 36px);
     font-weight: 700;
     letter-spacing: -0.5px;
@@ -25,84 +28,67 @@
     max-width: 800px;
     margin: 0 auto 14px;
   }
-  .deck {
+  .page p {
     font-size: 16px;
-    color: #555;
     max-width: 800px;
-    margin: 0 auto 10px;
+    margin: 0 auto 18px;
   }
-  .byline {
+  .page h1 + p {           /* deck */
+    color: #555;
+    margin-bottom: 10px;
+  }
+  .page h1 + p + p {       /* byline */
     font-size: 13px;
     color: #999;
-    max-width: 800px;
-    margin: 0 auto 36px;
+    margin-bottom: 36px;
   }
-  .byline a { color: #999; }
-  p { font-size: 16px; margin: 0 auto 18px; max-width: 800px; }
-  figure { margin: 36px 0 44px; }
-  iframe {
-    width: 100%;
+  .page h1 + p + p a { color: #999; }
+  .page a {
+    color: #0D7680;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(13,118,128,0.35);
+  }
+  .page figure { margin: 36px 0 44px; }
+  .page iframe { width: 100%; border: none; display: block; }
+  .page hr {
+    max-width: 800px;
+    margin: 24px auto 12px;
     border: none;
-    display: block;
-  }
-  .footer {
-    max-width: 800px;
-    margin: 12px auto 0;
-    padding-top: 20px;
     border-top: 1px solid #e5e5e5;
+  }
+  .page hr ~ p {           /* footer */
     font-size: 13px;
     color: #777;
-  }
-  .footer a { color: #0D7680; }
-  .deck a, .text a { color: #0D7680; text-decoration: none; border-bottom: 1px solid rgba(13,118,128,0.35); }
-  @media (prefers-color-scheme: dark) {
-    /* Article stays light — charts are theme-consistent with it. */
   }
 </style>
 </head>
 <body>
-<div class="page">
+<div class="page" id="content"></div>
 
-  <h1>&lsquo;Who wants to be hired&rsquo; now outnumbers &lsquo;Who is hiring&rsquo;</h1>
-  <div class="deck">For the first time since 2014, <a href="https://news.ycombinator.com/item?id=48747975">job-seeker comments</a> on <a href="https://news.ycombinator.com">Hacker News</a> exceed <a href="https://news.ycombinator.com/item?id=48747976">hiring comments</a>.</div>
-  <div class="byline">Ilia Kolesnikov &middot; July 2026 &middot; <a href="https://github.com/ej29-r3d/hn-hiring-crossover">data and code</a></div>
-
-  <div class="text">
-    <p>Every month <a href="https://news.ycombinator.com">Hacker News</a> runs two job threads: job postings go in &ldquo;<a href="https://news.ycombinator.com/item?id=48747976">Ask HN: Who is hiring?</a>&rdquo; and resumes in &ldquo;<a href="https://news.ycombinator.com/item?id=48747975">Who wants to be hired?</a>&rdquo;.</p>
-    <p>I counted the comments in every thread and checked the pairs back to 2014. In 143 months, seeker comments never once outnumbered hiring comments. In 2026 they did.</p>
-  </div>
-
-  <figure>
-    <iframe src="hiring-chart.html?embed=1&title=hide&deck=hide" data-chart="hiring-chart.html" height="640" title="Monthly comments in both HN job threads, 2019-2026, with event annotations"></iframe>
-  </figure>
-
-  <div class="text">
-    <p>The drop tracks Fed rates, not AI. Hiring fell 35% during 2022, before ChatGPT launched, and none of the AI releases marked on the chart left a visible break.</p>
-  </div>
-
-  <figure>
-    <iframe src="avg-by-year.html?embed=1" data-chart="avg-by-year.html" height="560" title="Average monthly comments in the January-July threads of each year"></iframe>
-  </figure>
-
-  <div class="text">
-    <p>Averaged over January&ndash;July, 2021 had 961 hiring comments a month against 219 from seekers. In 2026 it&rsquo;s 488 against 502. The flip came in May and widened every month since: ahead by 5 in May, 91 in June, 129 in July.</p>
-  </div>
-
-  <figure>
-    <iframe src="seeker-share.html?embed=1" data-chart="seeker-share.html" height="540" title="Job seekers' share of all thread comments by year"></iframe>
-  </figure>
-
-  <div class="text">
-    <p>The threads aren&rsquo;t dying, which would be the boring explanation. Both threads together have held near 11&ndash;13k comments a year since 2019. What changed is who shows up. Job seekers wrote 19% of the comments in 2021. This year they&rsquo;ve written 51%.</p>
-
-    <div class="footer">
-      Comment counts are a proxy: one hiring comment can hide fifty openings, and HN skews senior and startup-heavy. Data and chart code: <a href="https://github.com/ej29-r3d/hn-hiring-crossover">github.com/ej29-r3d/hn-hiring-crossover</a>.
-    </div>
-  </div>
-
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script>
+// Render article.md. Chart placeholders in the markdown look like:
+//   {{chart hiring-chart.html?embed=1&title=hide 640}}
+// and become auto-resizing iframes.
+(async function() {
+  var el = document.getElementById("content");
+  var md;
+  try {
+    var res = await fetch("article.md");
+    if (!res.ok) throw new Error(res.status);
+    md = await res.text();
+  } catch (e) {
+    el.innerHTML = "<p>Couldn&rsquo;t load <code>article.md</code>. Open this page over HTTP " +
+      "(e.g. <code>python3 -m http.server</code>), not file://.</p>";
+    return;
+  }
+  md = md.replace(/^\{\{chart ([^\s}]+) (\d+)\}\}$/gm, function(m, src, h) {
+    return '<figure><iframe src="' + src + '" data-chart="' + src.split("?")[0] +
+           '" height="' + h + '"></iframe></figure>';
+  });
+  el.innerHTML = marked.parse(md);
+})();
+
 // Auto-size chart iframes: each embedded chart posts
 // { type: "chart-resize", height, href } on load and resize.
 window.addEventListener("message", function(e) {
