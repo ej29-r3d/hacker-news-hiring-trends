@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>'Who wants to be hired' now outnumbers 'Who is hiring'</title>
+<meta name="description" content="For the first time since the monthly threads began pairing in 2014, job-seeker comments on Hacker News exceed hiring comments. Eight years of thread data, annotated.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #fff;
+    color: #1a1a1a;
+    line-height: 1.55;
+  }
+  .page { max-width: 1080px; margin: 0 auto; padding: 48px 20px 64px; }
+  .text { max-width: 680px; margin: 0 auto; }
+  h1 {
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    max-width: 680px;
+    margin: 0 auto 14px;
+  }
+  .deck {
+    font-size: 16px;
+    color: #555;
+    max-width: 680px;
+    margin: 0 auto 10px;
+  }
+  .byline {
+    font-size: 13px;
+    color: #999;
+    max-width: 680px;
+    margin: 0 auto 36px;
+  }
+  .byline a { color: #999; }
+  p { font-size: 16px; margin: 0 auto 18px; max-width: 680px; }
+  figure { margin: 36px 0 44px; }
+  iframe {
+    width: 100%;
+    border: none;
+    display: block;
+  }
+  .footer {
+    max-width: 680px;
+    margin: 12px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid #e5e5e5;
+    font-size: 13px;
+    color: #777;
+  }
+  .footer a { color: #0D7680; }
+  @media (prefers-color-scheme: dark) {
+    /* Article stays light — charts are theme-consistent with it. */
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>&lsquo;Who wants to be hired&rsquo; now outnumbers &lsquo;Who is hiring&rsquo;</h1>
+  <div class="deck">For the first time since the monthly threads began pairing in 2014, job-seeker comments on Hacker News exceed hiring comments.</div>
+  <div class="byline">Ilia Kolesnikov &middot; July 2026 &middot; <a href="https://github.com/eli-kolesnikov/hn-hiring-crossover">data and code</a></div>
+
+  <div class="text">
+    <p>Every month Hacker News runs two job threads. Companies post openings in &ldquo;Ask HN: Who is hiring?&rdquo; and people looking for work post in &ldquo;Who wants to be hired?&rdquo;. The comment counts make a small but honest labor-market indicator: nobody advertises a job that doesn&rsquo;t exist, and nobody asks for work they don&rsquo;t need.</p>
+    <p>I pulled the counts for every thread from the HN Algolia API and checked the pairs back to 2014. In 143 months, seeker comments never once outnumbered hiring comments. In 2026 they did.</p>
+  </div>
+
+  <figure>
+    <iframe src="hiring-chart.html?embed=1&title=hide" data-chart="hiring-chart.html" height="640" title="Monthly comments in both HN job threads, 2019-2026, with event annotations"></iframe>
+  </figure>
+
+  <div class="text">
+    <p>The timeline is the part most retellings get wrong. Hiring comments fell 35% during 2022, months before ChatGPT launched. The break came in July 2022, right after the Fed&rsquo;s first 75-basis-point hike since 1994 and the big-tech hiring freezes. And the Fed has been cutting since September 2024 with no rebound at all. The decline didn&rsquo;t start with AI. The missing recovery is where AI becomes the suspect.</p>
+  </div>
+
+  <figure>
+    <iframe src="avg-by-year.html?embed=1" data-chart="avg-by-year.html" height="560" title="Average monthly comments in the January-July threads of each year"></iframe>
+  </figure>
+
+  <div class="text">
+    <p>Averaged over January&ndash;July, 2021 had 961 hiring comments a month against 219 from seekers. In 2026 it&rsquo;s 488 against 502. The flip came in May and widened every month since: ahead by 5 in May, 91 in June, 129 in July.</p>
+  </div>
+
+  <figure>
+    <iframe src="seeker-share.html?embed=1" data-chart="seeker-share.html" height="540" title="Job seekers' share of all thread comments by year"></iframe>
+  </figure>
+
+  <div class="text">
+    <p>The threads aren&rsquo;t dying, which would be the boring explanation. Both threads together have held near 11&ndash;13k comments a year since 2019. What changed is who shows up. Job seekers wrote 19% of the comments in 2021. This year they&rsquo;ve written 51%.</p>
+
+    <div class="footer">
+      Comment counts are a proxy. One hiring comment can hide fifty openings, and HN skews senior and startup-heavy. The July 2026 thread is still accumulating, so today&rsquo;s numbers will drift up. Data, fetch script, and chart code: <a href="https://github.com/eli-kolesnikov/hn-hiring-crossover">github.com/eli-kolesnikov/hn-hiring-crossover</a>.
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Auto-size chart iframes: each embedded chart posts
+// { type: "chart-resize", height, href } on load and resize.
+window.addEventListener("message", function(e) {
+  if (!e.data || e.data.type !== "chart-resize" || !e.data.href) return;
+  var path = e.data.href.split("?")[0];
+  document.querySelectorAll("iframe[data-chart]").forEach(function(f) {
+    if (path.endsWith("/" + f.getAttribute("data-chart"))) {
+      f.style.height = e.data.height + "px";
+    }
+  });
+});
+</script>
+</body>
+</html>

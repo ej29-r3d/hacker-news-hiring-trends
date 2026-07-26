@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job-Seeker Share of Thread Comments — Bar Chart</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="headline"></div>
+  <div class="deck"></div>
+  <svg id="chart"></svg>
+  <div class="tooltip-box" id="tooltip"></div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- Core infrastructure -->
+<script src="core/utils.js"></script>
+<script src="core/tooltip.js"></script>
+<script src="core/styles.js"></script>
+<script src="core/accessibility.js"></script>
+<!-- Theme bridge -->
+<script src="themes/theme-definitions.js"></script>
+<script src="themes/theme-bridge.js"></script>
+<!-- Composables -->
+<script src="composables/composables.js"></script>
+<script src="composables/composables-bridge.js"></script>
+<script>
+
+// ============================================================
+// THEME — resolved from URL param or default
+// ============================================================
+const resolved = ThemeBridge.resolveCurrentTheme();
+ThemeBridge.injectFonts(resolved);
+const theme = {
+  ...ThemeBridge.toChartTheme(resolved),
+  headline: { size: 22, weight: 700, letterSpacing: "-0.3px" },
+  deck:     { size: 13, weight: 400 },
+  label:    { size: 12, weight: 500 },
+  axis:     { size: 11, weight: 400 },
+  source:   { size: 10, weight: 400 },
+  tooltip:  { size: 13, labelSize: 12, valueSize: 12 },
+  layout: {
+    maxWidth: 880,
+    chartHeight: 400,
+    margin: { top: 30, right: 20, bottom: 40, left: 44 },
+  },
+  animation: { duration: 700, stagger: 45, ease: d3.easeCubicOut },
+};
+
+// ============================================================
+// DATA — job-seeker share of each year's combined comments
+// ============================================================
+const data = {
+  title: "Who the threads belong to now",
+  subtitle: "Job seekers' share of each year's combined comments in both threads. 2026 covers January–July.",
+  source: "Source: Hacker News monthly threads, counts via HN Algolia API as of Jul 21, 2026",
+  rows: [
+    { year: "2019", seekers: 3086,  hiring: 10021 },
+    { year: "2020", seekers: 3713,  hiring: 8638 },
+    { year: "2021", seekers: 2571,  hiring: 11231 },
+    { year: "2022", seekers: 2936,  hiring: 8642 },
+    { year: "2023", seekers: 4819,  hiring: 6541 },
+    { year: "2024", seekers: 5219,  hiring: 6266 },
+    { year: "2025", seekers: 4663,  hiring: 6012 },
+    { year: "2026", seekers: 3514,  hiring: 3419 },
+  ],
+};
+data.rows.forEach(d => { d.share = d.seekers / (d.seekers + d.hiring); });
+
+// ============================================================
+// APPLY THEME + TOOLTIP
+// ============================================================
+const container = document.querySelector(".container");
+ChartStyles.applyPageChrome(theme, data);
+const tooltip = ChartTooltip.create(container, theme);
+const c = theme.colors;
+const barColor = c.categorical[1];
+const anim = (ms) => ChartUtils.animDuration(ms);
+
+// ============================================================
+// RENDER
+// ============================================================
+const M = theme.layout.margin, W = theme.layout.maxWidth, H = theme.layout.chartHeight;
+const width = W - M.left - M.right, height = H - M.top - M.bottom;
+
+const svg = d3.select("#chart")
+  .attr("viewBox", `0 0 ${W} ${H}`)
+  .attr("preserveAspectRatio", "xMidYMid meet")
+  .style("width", "100%").style("max-width", W + "px")
+  .style("height", "auto").style("overflow", "visible");
+ChartA11y.enhanceSvg(svg, { title: data.title, description: data.subtitle });
+const g = svg.append("g").attr("transform", `translate(${M.left},${M.top})`);
+
+const x = d3.scaleBand().domain(data.rows.map(d => d.year)).range([0, width]).padding(0.32);
+const y = d3.scaleLinear().domain([0, 0.6]).range([height, 0]);
+
+g.append("g").call(d3.axisLeft(y).tickValues([0, .1, .2, .3, .4, .5, .6]).tickSize(-width).tickFormat(""))
+  .call(sel => { sel.selectAll("line").attr("stroke", c.gridLine); sel.select(".domain").remove(); });
+const xAxis = g.append("g").attr("transform", `translate(0,${height})`)
+  .call(d3.axisBottom(x).tickSize(0).tickPadding(10));
+xAxis.select(".domain").attr("stroke", c.border);
+xAxis.selectAll("text").attr("fill", c.textMuted).attr("font-family", theme.font).attr("font-size", theme.axis.size + "px");
+const yAxis = g.append("g")
+  .call(d3.axisLeft(y).tickValues([0, .2, .4, .6]).tickFormat(d3.format(".0%")).tickSize(0).tickPadding(8));
+yAxis.select(".domain").remove();
+yAxis.selectAll("text").attr("fill", c.textMuted).attr("font-family", theme.font)
+  .attr("font-size", theme.axis.size + "px").attr("font-variant-numeric", "tabular-nums");
+
+// Bars — rounded tops, grown from the baseline, %-labeled
+const barPath = (bx, by, bw) =>
+  `M ${bx} ${height} V ${by + 4} Q ${bx} ${by} ${bx + 4} ${by} H ${bx + bw - 4} Q ${bx + bw} ${by} ${bx + bw} ${by + 4} V ${height} Z`;
+
+data.rows.forEach((d, i) => {
+  const bx = x(d.year), bw = x.bandwidth(), by = y(d.share);
+  g.append("path")
+    .attr("d", barPath(bx, height, bw))
+    .attr("fill", barColor)
+    .attr("fill-opacity", d.share > 0.5 ? 1 : 0.55)
+    .transition()
+    .delay(anim(theme.animation.stagger) * i)
+    .duration(anim(theme.animation.duration))
+    .ease(theme.animation.ease)
+    .attr("d", barPath(bx, by, bw));
+  g.append("text")
+    .attr("x", bx + bw / 2).attr("y", by - 7)
+    .attr("text-anchor", "middle")
+    .attr("fill", d.share > 0.5 ? barColor : c.textMuted)
+    .attr("font-family", theme.font)
+    .attr("font-size", "11px").attr("font-weight", d.share > 0.5 ? 700 : 600)
+    .attr("font-variant-numeric", "tabular-nums")
+    .style("opacity", 0)
+    .text(d3.format(".0%")(d.share))
+    .transition()
+    .delay(anim(theme.animation.stagger) * i + anim(theme.animation.duration))
+    .duration(anim(200))
+    .style("opacity", 1);
+});
+
+// 50% parity line via the library composable
+const comp = ComposablesBridge.withTheme(theme);
+comp.addReferenceLine(g, {
+  orientation: "horizontal",
+  value: y(0.5),
+  x1: 0, x2: width,
+  label: "50% — as many seekers as employers",
+  labelAnchor: "start",
+  labelDx: -width + 4, labelDy: -8,
+  color: c.text,
+  dashArray: "5 4",
+  fontSize: theme.axis.size,
+});
+
+// Hover tooltips per bar (full-height hit targets)
+data.rows.forEach(d => {
+  g.append("rect")
+    .attr("x", x(d.year) - 6).attr("y", 0)
+    .attr("width", x.bandwidth() + 12).attr("height", height)
+    .attr("fill", "transparent")
+    .on("mousemove", function(event) {
+      tooltip.show(
+        ChartTooltip.heading(d.year + (d.year === "2026" ? " (Jan–Jul)" : ""), { color: c.textMuted, weight: 600, size: theme.tooltip.labelSize }) +
+        ChartTooltip.row("Seeker share", d3.format(".1%")(d.share), {
+          labelColor: c.textLight, valueColor: barColor, valueWeight: 700,
+          labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+        }) +
+        ChartTooltip.row("Seeker comments", ChartUtils.fmt.number(d.seekers), {
+          labelColor: c.textLight, valueColor: c.text, valueWeight: 700,
+          labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+        }) +
+        ChartTooltip.row("Hiring comments", ChartUtils.fmt.number(d.hiring), {
+          labelColor: c.textLight, valueColor: c.text, valueWeight: 700,
+          labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+        }),
+        event);
+    })
+    .on("mouseleave", () => tooltip.hide());
+});
+
+// ============================================================
+// SOURCE LINE + A11Y
+// ============================================================
+const sourceEl = document.createElement("div");
+sourceEl.style.cssText = `margin-top:10px; font-family:${theme.font}; font-size:${theme.source.size}px; color:${c.textLight};`;
+sourceEl.textContent = data.source;
+container.appendChild(sourceEl);
+
+ChartA11y.addDataTable(container, {
+  caption: data.title,
+  columns: ["Year", "Seeker share", "Seeker comments", "Hiring comments"],
+  rows: data.rows.map(d => [d.year, d3.format(".1%")(d.share), ChartUtils.fmt.number(d.seekers), ChartUtils.fmt.number(d.hiring)]),
+});
+
+</script>
+</body>
+</html>

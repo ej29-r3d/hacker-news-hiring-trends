@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jan–Jul Monthly Averages by Year — Grouped Bars</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="headline"></div>
+  <div class="deck"></div>
+  <div class="legend" id="legend"></div>
+  <svg id="chart"></svg>
+  <div class="tooltip-box" id="tooltip"></div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- Core infrastructure -->
+<script src="core/utils.js"></script>
+<script src="core/tooltip.js"></script>
+<script src="core/styles.js"></script>
+<script src="core/accessibility.js"></script>
+<!-- Theme bridge -->
+<script src="themes/theme-definitions.js"></script>
+<script src="themes/theme-bridge.js"></script>
+<script>
+
+// ============================================================
+// THEME — resolved from URL param or default
+// ============================================================
+const resolved = ThemeBridge.resolveCurrentTheme();
+ThemeBridge.injectFonts(resolved);
+const theme = {
+  ...ThemeBridge.toChartTheme(resolved),
+  headline: { size: 22, weight: 700, letterSpacing: "-0.3px" },
+  deck:     { size: 13, weight: 400 },
+  label:    { size: 12, weight: 500 },
+  axis:     { size: 11, weight: 400 },
+  source:   { size: 10, weight: 400 },
+  tooltip:  { size: 13, labelSize: 12, valueSize: 12 },
+  layout: {
+    maxWidth: 880,
+    chartHeight: 420,
+    margin: { top: 24, right: 20, bottom: 40, left: 48 },
+  },
+  animation: { duration: 700, stagger: 45, ease: d3.easeCubicOut },
+};
+
+// ============================================================
+// DATA — Jan–Jul monthly averages per year, both threads
+// ============================================================
+const data = {
+  title: "The flip, averaged",
+  subtitle: "Average monthly comments in the January–July threads of each year. 2026 is the first year job-seeker comments outnumber hiring comments.",
+  source: "Source: Hacker News monthly threads, counts via HN Algolia API as of Jul 21, 2026",
+  seriesHiring: "Who is hiring?",
+  seriesSeekers: "Who wants to be hired?",
+  rows: [
+    { year: "2019", hiring: 884, seekers: 261 },
+    { year: "2020", hiring: 678, seekers: 312 },
+    { year: "2021", hiring: 961, seekers: 219 },
+    { year: "2022", hiring: 792, seekers: 229 },
+    { year: "2023", hiring: 540, seekers: 391 },
+    { year: "2024", hiring: 553, seekers: 458 },
+    { year: "2025", hiring: 504, seekers: 390 },
+    { year: "2026", hiring: 488, seekers: 502 },
+  ],
+};
+
+// ============================================================
+// APPLY THEME + TOOLTIP + LEGEND
+// ============================================================
+const container = document.querySelector(".container");
+ChartStyles.applyPageChrome(theme, data);
+const tooltip = ChartTooltip.create(container, theme);
+const c = theme.colors;
+const seriesColor = { hiring: c.categorical[0], seekers: c.categorical[1] };
+const anim = (ms) => ChartUtils.animDuration(ms);
+
+const legend = document.getElementById("legend");
+legend.style.cssText = `display:flex; gap:20px; margin:10px 0 4px; font-family:${theme.font}; font-size:${theme.label.size}px; color:${c.textLight};`;
+[[data.seriesHiring, seriesColor.hiring], [data.seriesSeekers, seriesColor.seekers]].forEach(([label, color]) => {
+  const el = document.createElement("span");
+  el.style.cssText = "display:inline-flex; align-items:center; gap:7px;";
+  const dot = document.createElement("span");
+  dot.style.cssText = `width:9px; height:9px; border-radius:50%; background:${color};`;
+  el.appendChild(dot);
+  el.appendChild(document.createTextNode(label));
+  legend.appendChild(el);
+});
+
+// ============================================================
+// RENDER
+// ============================================================
+const M = theme.layout.margin, W = theme.layout.maxWidth, H = theme.layout.chartHeight;
+const width = W - M.left - M.right, height = H - M.top - M.bottom;
+
+const svg = d3.select("#chart")
+  .attr("viewBox", `0 0 ${W} ${H}`)
+  .attr("preserveAspectRatio", "xMidYMid meet")
+  .style("width", "100%").style("max-width", W + "px")
+  .style("height", "auto").style("overflow", "visible");
+ChartA11y.enhanceSvg(svg, { title: data.title, description: data.subtitle });
+const g = svg.append("g").attr("transform", `translate(${M.left},${M.top})`);
+
+const x0 = d3.scaleBand().domain(data.rows.map(d => d.year)).range([0, width]).paddingInner(0.25).paddingOuter(0.08);
+const x1 = d3.scaleBand().domain(["hiring", "seekers"]).range([0, x0.bandwidth()]).paddingInner(0.06);
+const y = d3.scaleLinear().domain([0, 1000]).range([height, 0]);
+
+g.append("g").call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(""))
+  .call(sel => { sel.selectAll("line").attr("stroke", c.gridLine); sel.select(".domain").remove(); });
+const xAxis = g.append("g").attr("transform", `translate(0,${height})`)
+  .call(d3.axisBottom(x0).tickSize(0).tickPadding(10));
+xAxis.select(".domain").attr("stroke", c.border);
+xAxis.selectAll("text").attr("fill", c.textMuted).attr("font-family", theme.font).attr("font-size", theme.axis.size + "px");
+const yAxis = g.append("g").call(d3.axisLeft(y).ticks(5).tickFormat(ChartUtils.fmt.number).tickSize(0).tickPadding(8));
+yAxis.select(".domain").remove();
+yAxis.selectAll("text").attr("fill", c.textMuted).attr("font-family", theme.font)
+  .attr("font-size", theme.axis.size + "px").attr("font-variant-numeric", "tabular-nums");
+
+// Bars — rounded tops, grown from the baseline, value-labeled
+const barPath = (bx, by, bw) =>
+  `M ${bx} ${height} V ${by + 4} Q ${bx} ${by} ${bx + 4} ${by} H ${bx + bw - 4} Q ${bx + bw} ${by} ${bx + bw} ${by + 4} V ${height} Z`;
+
+const groups = g.selectAll(".year-group").data(data.rows).join("g").attr("class", "year-group");
+
+groups.each(function(d, gi) {
+  const grp = d3.select(this);
+  ["hiring", "seekers"].forEach(key => {
+    const bx = x0(d.year) + x1(key), bw = x1.bandwidth(), by = y(d[key]);
+    grp.append("path")
+      .attr("d", barPath(bx, height, bw))
+      .attr("fill", seriesColor[key])
+      .transition()
+      .delay(anim(theme.animation.stagger) * gi)
+      .duration(anim(theme.animation.duration))
+      .ease(theme.animation.ease)
+      .attr("d", barPath(bx, by, bw));
+    grp.append("text")
+      .attr("x", bx + bw / 2).attr("y", by - 6)
+      .attr("text-anchor", "middle")
+      .attr("fill", c.textMuted).attr("font-family", theme.font)
+      .attr("font-size", "10px").attr("font-weight", 600)
+      .attr("font-variant-numeric", "tabular-nums")
+      .style("opacity", 0)
+      .text(d[key])
+      .transition()
+      .delay(anim(theme.animation.stagger) * gi + anim(theme.animation.duration))
+      .duration(anim(200))
+      .style("opacity", 1);
+  });
+});
+
+// Hover: per-year tooltip, dim other groups
+groups.append("rect")
+  .attr("x", d => x0(d.year)).attr("y", 0)
+  .attr("width", x0.bandwidth()).attr("height", height)
+  .attr("fill", "transparent")
+  .on("mousemove", function(event, d) {
+    groups.transition().duration(150).style("opacity", b => b === d ? 1 : 0.35);
+    const ratio = (d.hiring / d.seekers);
+    tooltip.show(
+      ChartTooltip.heading(d.year + " (Jan–Jul avg)", { color: c.textMuted, weight: 600, size: theme.tooltip.labelSize }) +
+      ChartTooltip.row(data.seriesHiring, ChartUtils.fmt.number(d.hiring), {
+        labelColor: c.textLight, valueColor: seriesColor.hiring, valueWeight: 700,
+        labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+      }) +
+      ChartTooltip.row(data.seriesSeekers, ChartUtils.fmt.number(d.seekers), {
+        labelColor: c.textLight, valueColor: seriesColor.seekers, valueWeight: 700,
+        labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+      }) +
+      ChartTooltip.row("Offers per seeker", ratio.toFixed(2), {
+        labelColor: c.textLight, valueColor: c.text, valueWeight: 700,
+        labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+      }),
+      event);
+  })
+  .on("mouseleave", () => {
+    groups.transition().duration(150).style("opacity", 1);
+    tooltip.hide();
+  });
+
+// ============================================================
+// SOURCE LINE + A11Y
+// ============================================================
+const sourceEl = document.createElement("div");
+sourceEl.style.cssText = `margin-top:10px; font-family:${theme.font}; font-size:${theme.source.size}px; color:${c.textLight};`;
+sourceEl.textContent = data.source;
+container.appendChild(sourceEl);
+
+ChartA11y.addDataTable(container, {
+  caption: data.title,
+  columns: ["Year", data.seriesHiring, data.seriesSeekers],
+  rows: data.rows.map(d => [d.year, ChartUtils.fmt.number(d.hiring), ChartUtils.fmt.number(d.seekers)]),
+});
+
+</script>
+</body>
+</html>

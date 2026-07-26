@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HN Hiring vs Job Seeking — Annotated Dual Line</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="headline"></div>
+  <div class="deck"></div>
+  <svg id="chart"></svg>
+  <div class="tooltip-box" id="tooltip"></div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<!-- Core infrastructure -->
+<script src="core/utils.js"></script>
+<script src="core/tooltip.js"></script>
+<script src="core/styles.js"></script>
+<script src="core/accessibility.js"></script>
+<!-- Theme bridge -->
+<script src="themes/theme-definitions.js"></script>
+<script src="themes/theme-bridge.js"></script>
+<!-- Composables -->
+<script src="composables/composables.js"></script>
+<script src="composables/composables-bridge.js"></script>
+<script>
+
+// ============================================================
+// THEME — resolved from URL param or default
+// ============================================================
+const resolved = ThemeBridge.resolveCurrentTheme();
+ThemeBridge.injectFonts(resolved);
+const theme = {
+  ...ThemeBridge.toChartTheme(resolved),
+  headline:   { size: 24, weight: 700, letterSpacing: "-0.3px" },
+  deck:       { size: 13, weight: 400 },
+  label:      { size: 12, weight: 500 },
+  value:      { size: 13, weight: 700 },
+  axis:       { size: 11, weight: 400 },
+  source:     { size: 10, weight: 400 },
+  tooltip:    { size: 13, labelSize: 12, valueSize: 12 },
+  annotation: { size: 11, weight: 600 },
+  layout: {
+    maxWidth: 1060,
+    chartHeight: 520,
+    margin: { top: 110, right: 175, bottom: 46, left: 52 },
+  },
+  animation: {
+    lineDuration: 1800,
+    fadeDuration: 400,
+    duration: 600,
+    stagger: 60,
+    ease: d3.easeCubicOut,
+  },
+};
+
+// ============================================================
+// DATA — comment counts in HN's monthly job threads
+// ============================================================
+const data = {
+  title: "Job-seeker comments overtake hiring comments on Hacker News",
+  subtitle: "Monthly comments in the “Ask HN: Who is hiring?” and “Who wants to be hired?” threads, Jan 2019 to Jul 2026. Hiring comments have fallen sharply from their 2021 peak, while job-seeker comments hit a record in 2026, producing the first crossover in the series.",
+  source: "Source: Hacker News monthly threads, counts via HN Algolia API as of Jul 21, 2026 · Jan 2019 – Jul 2026 (July thread still accumulating)",
+  seriesHiring: "Who is hiring?",
+  seriesSeekers: "Who wants to be hired?",
+  // [month, whoWantsToBeHired, whoIsHiring]
+  rows: [
+    ["2019-01",239,951],["2019-02",174,828],["2019-03",222,864],["2019-04",290,858],
+    ["2019-05",262,1007],["2019-06",207,787],["2019-07",435,891],["2019-08",253,843],
+    ["2019-09",156,703],["2019-10",363,891],["2019-11",245,732],["2019-12",240,666],
+    ["2020-01",236,694],["2020-02",217,673],["2020-03",335,769],["2020-04",503,597],
+    ["2020-05",319,685],["2020-06",297,655],["2020-07",278,676],["2020-08",405,825],
+    ["2020-09",338,696],["2020-10",279,807],["2020-11",243,802],["2020-12",263,759],
+    ["2021-01",273,839],["2021-02",225,1043],["2021-03",217,959],["2021-04",218,964],
+    ["2021-05",231,913],["2021-06",211,1029],["2021-07",159,977],["2021-08",214,895],
+    ["2021-09",208,955],["2021-10",189,837],["2021-11",231,1007],["2021-12",195,813],
+    ["2022-01",224,757],["2022-02",244,870],["2022-03",246,855],["2022-04",174,787],
+    ["2022-05",264,831],["2022-06",221,842],["2022-07",233,605],["2022-08",287,745],
+    ["2022-09",290,609],["2022-10",265,551],["2022-11",300,627],["2022-12",188,563],
+    ["2023-01",381,523],["2023-02",385,582],["2023-03",384,629],["2023-04",456,574],
+    ["2023-05",355,499],["2023-06",430,528],["2023-07",346,444],["2023-08",444,529],
+    ["2023-09",381,494],["2023-10",493,639],["2023-11",370,596],["2023-12",394,504],
+    ["2024-01",459,481],["2024-02",466,537],["2024-03",429,483],["2024-04",454,485],
+    ["2024-05",452,731],["2024-06",461,550],["2024-07",487,604],["2024-08",386,466],
+    ["2024-09",420,484],["2024-10",427,481],["2024-11",357,493],["2024-12",421,471],
+    ["2025-01",378,481],["2025-02",489,616],["2025-03",471,516],["2025-04",285,493],
+    ["2025-05",367,435],["2025-06",379,528],["2025-07",364,456],["2025-08",357,448],
+    ["2025-09",353,445],["2025-10",372,465],["2025-11",435,582],["2025-12",413,547],
+    ["2026-01",405,404],["2026-02",556,597],["2026-03",429,467],["2026-04",413,465],
+    ["2026-05",557,552],["2026-06",588,497],["2026-07",566,437],  ],
+  // On-chart annotations. cat: "money" (rates/layoffs/macro), "ai", "cross". row: vertical lane 0..2.
+  annotations: [
+    { ym: "2020-03", label: "COVID",                        sub: "Mar 2020", cat: "money", row: 0 },
+    { ym: "2022-03", label: "First Fed hike",               sub: "Mar 2022", cat: "money", row: 1 },
+    { ym: "2022-11", label: "ChatGPT",                      sub: "Nov 2022", cat: "ai",    row: 0 },
+    { ym: "2023-01", label: "Big-tech layoffs",             sub: "Jan 2023", cat: "money", row: 1, dx: 48 },
+    { ym: "2024-09", label: "Fed cuts begin — no rebound", sub: "Sep 2024", cat: "money", row: 0 },
+    { ym: "2025-02", label: "Claude Code",                  sub: "Feb 2025", cat: "ai",    row: 1, dx: 14 },
+  ],
+  // Month-keyed event notes surfaced in the tooltip (from LinkedIn-posts/data/hn-hiring/events.csv)
+  events: {
+    "2020-03": "COVID-19 declared; Fed cuts to 0–0.25%",
+    "2021-06": "GitHub Copilot technical preview",
+    "2021-11": "Nasdaq peaks — end of the ZIRP bull run",
+    "2022-01": "Section 174 R&D amortization takes effect",
+    "2022-03": "First Fed hike (+25bp)",
+    "2022-05": "Fed +50bp; Meta hiring freeze",
+    "2022-06": "Fed +75bp — first jumbo since 1994; Copilot GA",
+    "2022-07": "Fed +75bp; Google/Apple/Amazon freezes",
+    "2022-09": "Fed +75bp",
+    "2022-11": "Meta lays off 11k; Fed +75bp; ChatGPT (Nov 30)",
+    "2022-12": "Fed +50bp → 4.25–4.50%",
+    "2023-01": "Amazon 18k, Microsoft 10k, Google 12k",
+    "2023-03": "SVB collapses; GPT-4; Meta round two (10k)",
+    "2023-07": "Final Fed hike → peak 5.25–5.50%",
+    "2024-01": "Layoff wave ~34k/mo (Google, Amazon, Unity…)",
+    "2024-06": "Claude 3.5 Sonnet — AI coding leap",
+    "2024-08": "Cursor Series A — AI-first IDEs go mainstream",
+    "2024-09": "First Fed cut (−50bp)",
+    "2024-12": "Fed −25bp → 4.25–4.50%",
+    "2025-01": "DeepSeek R1; Nvidia shock",
+    "2025-02": "Claude Code research preview; Meta cuts 3.6k",
+    "2025-04": "Liberation Day tariffs",
+    "2025-05": "Claude 4 + Claude Code GA; OpenAI Codex",
+    "2025-07": "OBBBA restores §174 expensing; Microsoft cuts 9k",
+    "2025-08": "GPT-5; Stanford “Canaries” paper",
+    "2025-09": "Fed resumes cuts (−25bp)",
+    "2025-10": "Amazon announces ~14k; Fed −25bp",
+    "2025-12": "Fed −25bp → 3.50–3.75% — last cut",
+    "2026-01": "Amazon confirms 16k more; FOMC begins holding",
+    "2026-03": "Oracle largest-ever cut begins (~21–30k)",
+    "2026-05": "Meta cuts 8k; AI = 40% of stated layoff reasons",
+    "2026-06": "Fed: 4th consecutive hold",
+    "2026-07": "Indeed: postings +15% since Feb 2025, 71% senior",
+  },
+};
+
+const parseYm = d3.timeParse("%Y-%m");
+const series = data.rows.map(([ym, seekers, hiring]) => ({
+  ym, date: parseYm(ym), seekers, hiring,
+}));
+
+// ============================================================
+// APPLY THEME + TOOLTIP + LEGEND
+// ============================================================
+const container = document.querySelector(".container");
+ChartStyles.applyPageChrome(theme, data);
+const tooltip = ChartTooltip.create(container, theme);
+const c = theme.colors;
+
+const seriesColor = {
+  hiring:  c.categorical[0],
+  seekers: c.categorical[1],
+};
+const annColor = {
+  money: c.crosshair,
+  ai:    c.categorical[2],
+};
+
+// ============================================================
+// RENDER — SVG scaffold
+// ============================================================
+const M = theme.layout.margin;
+const W = theme.layout.maxWidth;
+const H = theme.layout.chartHeight;
+const width  = W - M.left - M.right;
+const height = H - M.top - M.bottom;
+const anim = (ms) => ChartUtils.animDuration(ms);
+
+const svg = d3.select("#chart")
+  .attr("viewBox", `0 0 ${W} ${H}`)
+  .attr("preserveAspectRatio", "xMidYMid meet")
+  .style("width", "100%")
+  .style("max-width", W + "px")
+  .style("height", "auto")
+  .style("overflow", "visible");
+
+ChartA11y.enhanceSvg(svg, { title: data.title, description: data.subtitle });
+
+const g = svg.append("g").attr("transform", `translate(${M.left},${M.top})`);
+
+// Scales — x extends past the last data point so the crossover band
+// and endpoint marker get breathing room at the right edge
+const lastDate = series[series.length - 1].date;
+const x = d3.scaleTime()
+  .domain([series[0].date, parseYm("2026-12")])
+  .range([0, width]);
+const y = d3.scaleLinear()
+  .domain([0, 1200])
+  .range([height, 0]);
+const monthStep = x(series[1].date) - x(series[0].date);
+
+// Clip for line draw-in
+const defs = svg.append("defs");
+const clipRect = defs.append("clipPath").attr("id", "line-clip")
+  .append("rect")
+  .attr("x", -2).attr("y", -M.top)
+  .attr("width", 0).attr("height", H);
+clipRect.transition()
+  .duration(anim(theme.animation.lineDuration))
+  .ease(theme.animation.ease)
+  .attr("width", width + 4);
+
+// Grid
+g.append("g").attr("class", "grid")
+  .call(d3.axisLeft(y).ticks(6).tickSize(-width).tickFormat(""))
+  .call(sel => {
+    sel.selectAll("line").attr("stroke", c.gridLine).attr("stroke-width", 0.8);
+    sel.select(".domain").remove();
+  });
+
+// X axis — annual labeled ticks + small unlabeled quarterly ticks
+const xAxis = g.append("g")
+  .attr("transform", `translate(0,${height})`)
+  .call(d3.axisBottom(x)
+    .ticks(d3.timeYear.every(1))
+    .tickFormat(d3.timeFormat("%Y"))
+    .tickSize(5).tickPadding(8));
+xAxis.select(".domain").attr("stroke", c.border);
+xAxis.selectAll("line").attr("stroke", c.border);
+xAxis.selectAll("text")
+  .attr("fill", c.textMuted).attr("font-family", theme.font)
+  .attr("font-size", theme.axis.size + "px");
+
+const xAxisMinor = g.append("g")
+  .attr("transform", `translate(0,${height})`)
+  .call(d3.axisBottom(x)
+    .ticks(d3.timeMonth.every(3))
+    .tickSize(3).tickFormat(""));
+xAxisMinor.selectAll(".tick").filter(d => d.getMonth() === 0).remove();
+xAxisMinor.select(".domain").remove();
+xAxisMinor.selectAll("line").attr("stroke", c.border);
+
+// Endpoint month label under the axis
+g.append("text")
+  .attr("x", x(lastDate)).attr("y", height + 20)
+  .attr("text-anchor", "middle")
+  .attr("fill", c.textMuted).attr("font-family", theme.font)
+  .attr("font-size", theme.axis.size + "px")
+  .text("Jul 2026");
+
+// Y axis
+const yAxis = g.append("g")
+  .call(d3.axisLeft(y).ticks(6).tickFormat(ChartUtils.fmt.number).tickSize(0).tickPadding(8));
+yAxis.select(".domain").remove();
+yAxis.selectAll("text")
+  .attr("fill", c.textMuted).attr("font-family", theme.font)
+  .attr("font-size", theme.axis.size + "px")
+  .attr("font-variant-numeric", "tabular-nums");
+
+// Y-axis title
+g.append("text")
+  .attr("x", -M.left + 10).attr("y", -14)
+  .attr("fill", c.primary).attr("font-family", theme.font)
+  .attr("font-size", theme.label.size + "px")
+  .attr("font-weight", 600)
+  .text("Monthly comments");
+
+// ============================================================
+// CROSSOVER BAND — sustained run where seekers > offers.
+// Single-month blips (Jan 2026) stay visible in the lines and
+// tooltip; only runs of 2+ months earn a shaded band.
+// ============================================================
+const crossRuns = [];
+let run = null;
+series.forEach(d => {
+  if (d.seekers > d.hiring) {
+    if (!run) run = { from: d.date, to: d.date, months: 1 };
+    else { run.to = d.date; run.months++; }
+  } else if (run) { crossRuns.push(run); run = null; }
+});
+if (run) crossRuns.push(run);
+
+crossRuns.filter(r => r.months >= 2).forEach(r => {
+  const x0 = Math.max(0, x(r.from) - monthStep / 2);
+  // A run that reaches the last data point extends to the plot edge
+  const x1 = (+r.to === +lastDate) ? width : Math.min(width, x(r.to) + monthStep / 2);
+  g.append("rect")
+    .attr("x", x0)
+    .attr("y", 0)
+    .attr("width", x1 - x0)
+    .attr("height", height)
+    .attr("fill", seriesColor.seekers)
+    .attr("fill-opacity", 0.08)
+    .attr("clip-path", "url(#line-clip)");
+
+  const bandLabel = g.append("text")
+    .attr("x", (x0 + x1) / 2).attr("y", 18)
+    .attr("text-anchor", "middle")
+    .attr("fill", seriesColor.seekers)
+    .attr("font-family", theme.font)
+    .attr("font-size", theme.annotation.size + "px")
+    .attr("font-weight", theme.annotation.weight);
+  bandLabel.append("tspan").attr("x", (x0 + x1) / 2).text("First crossover");
+  bandLabel.append("tspan").attr("x", (x0 + x1) / 2).attr("dy", 14).text("in the series");
+});
+
+// Dashed marker where the sustained crossover begins (May 2026).
+// The literal first single-month flip is Jan 2026 — visible in the
+// lines and the tooltip — but the durable regime change starts here.
+const crossStart = parseYm("2026-05");
+g.append("line")
+  .attr("x1", x(crossStart)).attr("x2", x(crossStart))
+  .attr("y1", 34).attr("y2", height)
+  .attr("stroke", seriesColor.seekers)
+  .attr("stroke-opacity", 0.5)
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4 3")
+  .attr("clip-path", "url(#line-clip)");
+
+// ============================================================
+// LINES
+// ============================================================
+const lineGen = key => d3.line()
+  .x(d => x(d.date))
+  .y(d => y(d[key]))
+  .curve(d3.curveMonotoneX);
+
+[["hiring", seriesColor.hiring], ["seekers", seriesColor.seekers]].forEach(([key, color]) => {
+  g.append("path").datum(series)
+    .attr("d", lineGen(key))
+    .attr("fill", "none")
+    .attr("stroke", color)
+    .attr("stroke-width", theme.lineWidth)
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round")
+    .attr("clip-path", "url(#line-clip)");
+});
+
+// Terminal dots + direct end labels: series-colored name, large value,
+// muted month line. Blocks push apart if the line ends sit too close.
+const last = series[series.length - 1];
+const endBlocks = [
+  { key: "seekers", label: data.seriesSeekers, value: last.seekers, by: y(last.seekers) },
+  { key: "hiring",  label: data.seriesHiring,  value: last.hiring,  by: y(last.hiring) },
+];
+const MIN_GAP = 60;
+if (Math.abs(endBlocks[0].by - endBlocks[1].by) < MIN_GAP) {
+  const mid = (endBlocks[0].by + endBlocks[1].by) / 2;
+  const upper = endBlocks[0].by <= endBlocks[1].by ? endBlocks[0] : endBlocks[1];
+  const lower = upper === endBlocks[0] ? endBlocks[1] : endBlocks[0];
+  upper.by = mid - MIN_GAP / 2;
+  lower.by = mid + MIN_GAP / 2;
+}
+endBlocks.forEach(s => {
+  const eg = g.append("g").style("opacity", 0);
+  eg.transition()
+    .delay(anim(theme.animation.lineDuration))
+    .duration(anim(theme.animation.fadeDuration))
+    .style("opacity", 1);
+  // Filled dot on the line's last point
+  eg.append("circle")
+    .attr("cx", x(lastDate)).attr("cy", y(last[s.key])).attr("r", 5)
+    .attr("fill", seriesColor[s.key])
+    .attr("stroke", c.background).attr("stroke-width", 1.5);
+  eg.append("text")
+    .attr("x", width + 14).attr("y", s.by - 12)
+    .attr("fill", seriesColor[s.key]).attr("font-family", theme.font)
+    .attr("font-size", theme.label.size + "px")
+    .attr("font-weight", 700)
+    .text(s.label);
+  eg.append("text")
+    .attr("x", width + 14).attr("y", s.by + 10)
+    .attr("fill", seriesColor[s.key]).attr("font-family", theme.font)
+    .attr("font-size", "22px")
+    .attr("font-weight", 700)
+    .attr("font-variant-numeric", "tabular-nums")
+    .text(ChartUtils.fmt.number(s.value));
+  eg.append("text")
+    .attr("x", width + 14).attr("y", s.by + 26)
+    .attr("fill", c.textMuted).attr("font-family", theme.font)
+    .attr("font-size", theme.axis.size + "px")
+    .attr("font-weight", 400)
+    .text("in Jul ’26");
+});
+
+// ============================================================
+// ANNOTATIONS — event pills anchored to the hiring line
+// Connectors stop at a dot ON the line the events act on — never
+// the axis. AI events keep dashed connectors: they never align
+// with a break in the lines, and that contrast is the argument.
+// ============================================================
+const comp = ComposablesBridge.withTheme(theme);
+const ROW_Y = [-90, -50];
+
+data.annotations.forEach(a => {
+  const ax = x(parseYm(a.ym));
+  const d = series.find(s => s.ym === a.ym);
+  const grp = comp.addEventPill(g, {
+    x: ax,
+    pillY: ROW_Y[a.row],
+    anchorY: y(d.hiring),
+    label: a.label,
+    sublabel: a.sub,
+    color: annColor[a.cat],
+    textColor: a.cat === "ai" ? annColor.ai : c.text,
+    dashed: a.cat === "ai",
+    dx: a.dx || 0,
+    fontSize: theme.annotation.size,
+    fontWeight: theme.annotation.weight,
+  });
+
+  // Fade in as the line draw reaches this x
+  grp.style("opacity", 0)
+    .transition()
+    .delay(anim(theme.animation.lineDuration * (ax / width)))
+    .duration(anim(theme.animation.fadeDuration))
+    .style("opacity", 1);
+});
+
+// ============================================================
+// CROSSHAIR + TOOLTIP
+// ============================================================
+const crosshair = g.append("line")
+  .attr("y1", 0).attr("y2", height)
+  .attr("stroke", c.crosshair).attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4 3").style("opacity", 0);
+
+const hoverDots = {
+  hiring:  g.append("circle").attr("r", 5).attr("fill", seriesColor.hiring)
+             .attr("stroke", c.background).attr("stroke-width", 2).style("opacity", 0),
+  seekers: g.append("circle").attr("r", 5).attr("fill", seriesColor.seekers)
+             .attr("stroke", c.background).attr("stroke-width", 2).style("opacity", 0),
+};
+
+const bisect = d3.bisector(d => d.date).left;
+
+g.append("rect")
+  .attr("width", width).attr("height", height)
+  .attr("fill", "none").attr("pointer-events", "all")
+  .style("cursor", "crosshair")
+  .on("mouseenter", () => {
+    crosshair.style("opacity", 1);
+    hoverDots.hiring.style("opacity", 1);
+    hoverDots.seekers.style("opacity", 1);
+  })
+  .on("mousemove", function(event) {
+    const [mx] = d3.pointer(event, this);
+    const dateAtMouse = x.invert(mx);
+    const idx = bisect(series, dateAtMouse, 1);
+    const d0 = series[idx - 1];
+    const d1 = series[idx] || d0;
+    const d = (dateAtMouse - d0.date) > (d1.date - dateAtMouse) ? d1 : d0;
+
+    const cx = x(d.date);
+    crosshair.attr("x1", cx).attr("x2", cx);
+    hoverDots.hiring.attr("cx", cx).attr("cy", y(d.hiring));
+    hoverDots.seekers.attr("cx", cx).attr("cy", y(d.seekers));
+
+    const gap = d.hiring - d.seekers;
+    let html =
+      ChartTooltip.heading(ChartUtils.fmt.monthYear(d.date), { color: c.textMuted, weight: 600, size: theme.tooltip.labelSize }) +
+      ChartTooltip.row(data.seriesHiring, ChartUtils.fmt.number(d.hiring), {
+        labelColor: c.textLight, valueColor: seriesColor.hiring, valueWeight: 700,
+        labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+      }) +
+      ChartTooltip.row(data.seriesSeekers, ChartUtils.fmt.number(d.seekers), {
+        labelColor: c.textLight, valueColor: seriesColor.seekers, valueWeight: 700,
+        labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+      }) +
+      ChartTooltip.row("Offers − seekers", (gap > 0 ? "+" : "") + ChartUtils.fmt.number(gap), {
+        labelColor: c.textLight,
+        valueColor: gap >= 0 ? seriesColor.hiring : seriesColor.seekers,
+        valueWeight: 700,
+        labelSize: theme.tooltip.labelSize, valueSize: theme.tooltip.valueSize,
+      });
+
+    if (data.events[d.ym]) {
+      html += ChartTooltip.divider(c.border) +
+        ChartTooltip.heading(data.events[d.ym], { color: c.textMuted, weight: 500, size: 11 });
+    }
+    tooltip.show(html, event);
+  })
+  .on("mouseleave", () => {
+    crosshair.style("opacity", 0);
+    hoverDots.hiring.style("opacity", 0);
+    hoverDots.seekers.style("opacity", 0);
+    tooltip.hide();
+  });
+
+// ============================================================
+// SOURCE LINE
+// ============================================================
+const sourceEl = document.createElement("div");
+sourceEl.style.cssText = `margin-top:10px; font-family:${theme.font}; font-size:${theme.source.size}px; font-weight:${theme.source.weight}; color:${c.textLight};`;
+sourceEl.textContent = data.source;
+container.appendChild(sourceEl);
+
+// ============================================================
+// A11Y — data table
+// ============================================================
+ChartA11y.addDataTable(container, {
+  caption: data.title,
+  columns: ["Month", data.seriesHiring, data.seriesSeekers],
+  rows: series.map(d => [
+    ChartUtils.fmt.monthYear(d.date),
+    ChartUtils.fmt.number(d.hiring),
+    ChartUtils.fmt.number(d.seekers),
+  ]),
+});
+
+</script>
+</body>
+</html>
