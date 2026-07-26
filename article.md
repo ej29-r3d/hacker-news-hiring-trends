@@ -2,7 +2,7 @@
 
 For the first time since 2014, [job-seeker comments](https://news.ycombinator.com/item?id=48747975) on [Hacker News](https://news.ycombinator.com) exceed [hiring comments](https://news.ycombinator.com/item?id=48747976).
 
-Ilia Kolesnikov · July 2026 · [data and code](https://github.com/ej29-r3d/hn-hiring-crossover)
+Ilia Kolesnikov · July 2026 · [data and code](https://github.com/ej29-r3d/hacker-news-hiring-trends)
 
 Every month [Hacker News](https://news.ycombinator.com) runs two job threads: job postings go in “[Ask HN: Who is hiring?](https://news.ycombinator.com/item?id=48747976)” and resumes in “[Who wants to be hired?](https://news.ycombinator.com/item?id=48747975)”.
 
