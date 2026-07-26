@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>'Who wants to be hired' now outnumbers 'Who is hiring'</title>
-<meta name="description" content="For the first time since the monthly threads began pairing in 2014, job-seeker comments on Hacker News exceed hiring comments. Eight years of thread data, annotated.">
+<meta name="description" content="For the first time since 2014, job-seeker comments on Hacker News exceed hiring comments. Eight years of thread data, annotated.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -54,6 +54,13 @@
     color: #777;
   }
   .footer a { color: #0D7680; }
+  .deck a, .text a { color: #0D7680; text-decoration: none; border-bottom: 1px solid rgba(13,118,128,0.35); }
+  figcaption {
+    max-width: 800px;
+    margin: 10px auto 0;
+    font-size: 13px;
+    color: #777;
+  }
   @media (prefers-color-scheme: dark) {
     /* Article stays light — charts are theme-consistent with it. */
   }
@@ -63,16 +70,17 @@
 <div class="page">
 
   <h1>&lsquo;Who wants to be hired&rsquo; now outnumbers &lsquo;Who is hiring&rsquo;</h1>
-  <div class="deck">For the first time since the monthly threads began pairing in 2014, job-seeker comments on Hacker News exceed hiring comments.</div>
+  <div class="deck">For the first time since 2014, <a href="https://news.ycombinator.com/item?id=48747975">job-seeker comments</a> on <a href="https://news.ycombinator.com">Hacker News</a> exceed <a href="https://news.ycombinator.com/item?id=48747976">hiring comments</a>.</div>
   <div class="byline">Ilia Kolesnikov &middot; July 2026 &middot; <a href="https://github.com/ej29-r3d/hn-hiring-crossover">data and code</a></div>
 
   <div class="text">
-    <p>Every month Hacker News runs two job threads. Companies post openings in &ldquo;Ask HN: Who is hiring?&rdquo; and people looking for work post in &ldquo;Who wants to be hired?&rdquo;.</p>
+    <p>Every month <a href="https://news.ycombinator.com">Hacker News</a> runs two job threads: job postings go in &ldquo;<a href="https://news.ycombinator.com/item?id=48747976">Ask HN: Who is hiring?</a>&rdquo; and resumes in &ldquo;<a href="https://news.ycombinator.com/item?id=48747975">Who wants to be hired?</a>&rdquo;.</p>
     <p>I counted the comments in every thread and checked the pairs back to 2014. In 143 months, seeker comments never once outnumbered hiring comments. In 2026 they did.</p>
   </div>
 
   <figure>
-    <iframe src="hiring-chart.html?embed=1&title=hide" data-chart="hiring-chart.html" height="640" title="Monthly comments in both HN job threads, 2019-2026, with event annotations"></iframe>
+    <iframe src="hiring-chart.html?embed=1&title=hide&deck=hide" data-chart="hiring-chart.html" height="640" title="Monthly comments in both HN job threads, 2019-2026, with event annotations"></iframe>
+    <figcaption>Monthly comments in the &ldquo;Ask HN: Who is hiring?&rdquo; and &ldquo;Who wants to be hired?&rdquo; threads, Jan 2019 to Jul 2026.</figcaption>
   </figure>
 
   <div class="text">

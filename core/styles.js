@@ -24,6 +24,9 @@ const ChartStyles = (() => {
     // ?title=hide force-hides the headline even when data.title is set, so a
     // host app can embed the chart and frame it with its own title control.
     const hideTitle = params.get("title") === "hide";
+    // ?deck=hide does the same for the subtitle, so a host page can move
+    // the descriptive text outside the embed (e.g. into a figcaption).
+    const hideDeck = params.get("deck") === "hide";
 
     // Body
     if (embed) {
@@ -160,7 +163,7 @@ const ChartStyles = (() => {
 
     // Deck
     const deck = document.querySelector(".deck");
-    if (deck && data.subtitle) {
+    if (deck && data.subtitle && !hideDeck) {
       deck.textContent = data.subtitle;
       deck.style.cssText = `
         font-family: ${t.font};
