@@ -21,3 +21,5 @@ Averaged over January–July, 2021 had 961 hiring comments a month against 219 f
 There is no less activity in the job threads. Just a flip inside them:
 - Job seekers wrote 19% of the comments in 2021.
 - This year they’ve written 51%.
+
+Some people say AI has no impact on jobs yet. Maybe. But the numbers are not positive.
