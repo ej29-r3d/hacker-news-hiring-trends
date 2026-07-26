@@ -315,6 +315,38 @@ g.append("line")
   .attr("clip-path", "url(#line-clip)");
 
 // ============================================================
+// DIFFERENCE FILL — the seeker-over-hiring wedge, from the exact
+// crossing to the data end. Built from the same point set as the
+// lines so its edges hug them; a clip rect bounds the region.
+// The honest way to amplify the crossover — the axis stays uniform.
+// ============================================================
+const crossX = (() => {
+  for (let i = 1; i < series.length; i++) {
+    const a = series[i - 1], b = series[i];
+    if (a.seekers <= a.hiring && b.seekers > b.hiring && b.date >= crossStart) {
+      const da = a.hiring - a.seekers, db = b.seekers - b.hiring;
+      return x(a.date) + (da / (da + db)) * (x(b.date) - x(a.date));
+    }
+  }
+  return null;
+})();
+if (crossX !== null) {
+  defs.append("clipPath").attr("id", "cross-clip").append("rect")
+    .attr("x", crossX).attr("y", 0)
+    .attr("width", x(lastDate) - crossX).attr("height", height);
+  g.append("g").attr("clip-path", "url(#line-clip)")
+    .append("path").datum(series)
+    .attr("d", d3.area()
+      .x(d => x(d.date))
+      .y0(d => y(d.hiring))
+      .y1(d => y(d.seekers))
+      .curve(d3.curveMonotoneX))
+    .attr("fill", seriesColor.seekers)
+    .attr("fill-opacity", 0.2)
+    .attr("clip-path", "url(#cross-clip)");
+}
+
+// ============================================================
 // LINES
 // ============================================================
 const lineGen = key => d3.line()
