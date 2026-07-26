@@ -18,7 +18,7 @@ Averaged over January–July, 2021 had 961 hiring comments a month against 219 f
 
 {{chart seeker-share.html?embed=1 540}}
 
-There is no less activity in the job threads. Just a flip inside them:
+The threads didn’t get quieter. What changed is who’s posting:
 - Job seekers wrote 19% of the comments in 2021.
 - This year they’ve written 51%.
 
