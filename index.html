@@ -92,7 +92,11 @@
     return;
   }
   md = md.replace(/^\{\{chart ([^\s}]+) (\d+)\}\}$/gm, function(m, src, h) {
-    return '<figure><iframe src="' + src + '" data-chart="' + src.split("?")[0] +
+    // Version the iframe document so chart edits show up on a normal
+    // reload; the charts' heavy assets (d3, fonts, core/) keep stable
+    // URLs and stay browser-cached.
+    var busted = src + (src.indexOf("?") > -1 ? "&" : "?") + "v=" + Date.now();
+    return '<figure><iframe src="' + busted + '" data-chart="' + src.split("?")[0] +
            '" height="' + h + '"></iframe></figure>';
   });
   el.innerHTML = marked.parse(md);
