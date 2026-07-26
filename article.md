@@ -18,8 +18,6 @@ Averaged over January–July, 2021 had 961 hiring comments a month against 219 f
 
 {{chart seeker-share.html?embed=1 540}}
 
-The threads didn’t get quieter. What changed is who’s posting:
-- Job seekers wrote 19% of the comments in 2021.
-- This year they’ve written 51%.
+The threads are as busy as they ever were. But in 2021 one comment in five came from a job seeker, and this year it’s every second one.
 
 Some people say AI has no impact on jobs yet. Maybe. But the numbers are not positive.
