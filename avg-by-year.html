@@ -56,7 +56,7 @@ const theme = {
 const data = {
   title: "The flip, averaged",
   subtitle: "Average monthly comments in the January–July threads of each year. 2026 is the first year job-seeker comments outnumber hiring comments.",
-  source: "Source: Hacker News monthly threads, counts via HN Algolia API as of Jul 21, 2026",
+  source: "Source: Hacker News monthly threads, as of Jul 21, 2026",
   seriesHiring: "Who is hiring?",
   seriesSeekers: "Who wants to be hired?",
   rows: [
@@ -185,13 +185,8 @@ groups.append("rect")
   });
 
 // ============================================================
-// SOURCE LINE + A11Y
+// A11Y
 // ============================================================
-const sourceEl = document.createElement("div");
-sourceEl.style.cssText = `margin-top:10px; font-family:${theme.font}; font-size:${theme.source.size}px; color:${c.textLight};`;
-sourceEl.textContent = data.source;
-container.appendChild(sourceEl);
-
 ChartA11y.addDataTable(container, {
   caption: data.title,
   columns: ["Year", data.seriesHiring, data.seriesSeekers],

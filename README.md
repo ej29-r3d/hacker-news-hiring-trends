@@ -11,9 +11,9 @@ Analysis of comment counts in Hacker News' two monthly job threads, January 2019
 - `avg-by-year.html` — January–July monthly averages per year.
 - `seeker-share.html` — job seekers' share of all thread comments per year, crossing 50% in 2026.
 - `data/monthly-thread-comments.csv` — the counts.
-- `data/fetch.py` — regenerates the CSV from the HN Algolia API (no dependencies). Counts drift as spam gets flagged and the newest thread accumulates, so re-run before citing.
+- `data/fetch.py` — regenerates the CSV (no dependencies). Counts drift as spam gets flagged and the newest thread accumulates, so re-run before citing.
 - `core/`, `themes/`, `composables/` — chart infrastructure from my [marketing analytics visualization library](https://github.com/ej29-r3d/marketing_analytics_visualization). D3 v7, zero build step, every chart is one self-contained HTML file. Append `?theme=T01`..`T20` to any chart URL to restyle it.
 
 ## Method
 
-Counts are `num_comments` on each month's "Ask HN: Who is hiring?" and "Ask HN: Who wants to be hired?" threads posted by [whoishiring](https://news.ycombinator.com/user?id=whoishiring), via the [HN Algolia API](https://hn.algolia.com/api). One thread per month per type (verified, no duplicates). A comment count is a proxy: one hiring comment can hide fifty openings, and HN skews senior and startup-heavy.
+Counts are the comment totals on each month's "Ask HN: Who is hiring?" and "Ask HN: Who wants to be hired?" threads posted by [whoishiring](https://news.ycombinator.com/user?id=whoishiring) — see `data/fetch.py`. One thread per month per type (verified, no duplicates). A comment count is a proxy: one hiring comment can hide fifty openings, and HN skews senior and startup-heavy.

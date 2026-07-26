@@ -58,7 +58,7 @@ const theme = {
 const data = {
   title: "Who the threads belong to now",
   subtitle: "Job seekers' share of each year's combined comments in both threads. 2026 covers January–July.",
-  source: "Source: Hacker News monthly threads, counts via HN Algolia API as of Jul 21, 2026",
+  source: "Source: Hacker News monthly threads, as of Jul 21, 2026",
   rows: [
     { year: "2019", seekers: 3086,  hiring: 10021 },
     { year: "2020", seekers: 3713,  hiring: 8638 },
@@ -182,13 +182,8 @@ data.rows.forEach(d => {
 });
 
 // ============================================================
-// SOURCE LINE + A11Y
+// A11Y
 // ============================================================
-const sourceEl = document.createElement("div");
-sourceEl.style.cssText = `margin-top:10px; font-family:${theme.font}; font-size:${theme.source.size}px; color:${c.textLight};`;
-sourceEl.textContent = data.source;
-container.appendChild(sourceEl);
-
 ChartA11y.addDataTable(container, {
   caption: data.title,
   columns: ["Year", "Seeker share", "Seeker comments", "Hiring comments"],

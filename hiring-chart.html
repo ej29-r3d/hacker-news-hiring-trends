@@ -65,8 +65,8 @@ const theme = {
 // ============================================================
 const data = {
   title: "Job-seeker comments overtake hiring comments on Hacker News",
-  subtitle: "Monthly comments in the “Ask HN: Who is hiring?” and “Who wants to be hired?” threads, Jan 2019 to Jul 2026. Hiring comments have fallen sharply from their 2021 peak, while job-seeker comments hit a record in 2026, producing the first crossover in the series.",
-  source: "Source: Hacker News monthly threads, counts via HN Algolia API as of Jul 21, 2026 · Jan 2019 – Jul 2026 (July thread still accumulating)",
+  subtitle: "Monthly comments in the “Ask HN: Who is hiring?” and “Who wants to be hired?” threads, Jan 2019 to Jul 2026.",
+  source: "Source: Hacker News monthly threads · Jan 2019 – Jul 2026",
   seriesHiring: "Who is hiring?",
   seriesSeekers: "Who wants to be hired?",
   // [month, whoWantsToBeHired, whoIsHiring]
@@ -515,14 +515,6 @@ g.append("rect")
     hoverDots.seekers.style("opacity", 0);
     tooltip.hide();
   });
-
-// ============================================================
-// SOURCE LINE
-// ============================================================
-const sourceEl = document.createElement("div");
-sourceEl.style.cssText = `margin-top:10px; font-family:${theme.font}; font-size:${theme.source.size}px; font-weight:${theme.source.weight}; color:${c.textLight};`;
-sourceEl.textContent = data.source;
-container.appendChild(sourceEl);
 
 // ============================================================
 // A11Y — data table

@@ -16,29 +16,29 @@
     line-height: 1.55;
   }
   .page { max-width: 1080px; margin: 0 auto; padding: 48px 20px 64px; }
-  .text { max-width: 680px; margin: 0 auto; }
+  .text { max-width: 800px; margin: 0 auto; }
   h1 {
     font-size: clamp(26px, 5vw, 36px);
     font-weight: 700;
     letter-spacing: -0.5px;
     line-height: 1.15;
-    max-width: 680px;
+    max-width: 800px;
     margin: 0 auto 14px;
   }
   .deck {
     font-size: 16px;
     color: #555;
-    max-width: 680px;
+    max-width: 800px;
     margin: 0 auto 10px;
   }
   .byline {
     font-size: 13px;
     color: #999;
-    max-width: 680px;
+    max-width: 800px;
     margin: 0 auto 36px;
   }
   .byline a { color: #999; }
-  p { font-size: 16px; margin: 0 auto 18px; max-width: 680px; }
+  p { font-size: 16px; margin: 0 auto 18px; max-width: 800px; }
   figure { margin: 36px 0 44px; }
   iframe {
     width: 100%;
@@ -46,7 +46,7 @@
     display: block;
   }
   .footer {
-    max-width: 680px;
+    max-width: 800px;
     margin: 12px auto 0;
     padding-top: 20px;
     border-top: 1px solid #e5e5e5;
@@ -67,8 +67,8 @@
   <div class="byline">Ilia Kolesnikov &middot; July 2026 &middot; <a href="https://github.com/ej29-r3d/hn-hiring-crossover">data and code</a></div>
 
   <div class="text">
-    <p>Every month Hacker News runs two job threads. Companies post openings in &ldquo;Ask HN: Who is hiring?&rdquo; and people looking for work post in &ldquo;Who wants to be hired?&rdquo;. The comment counts make a small but honest labor-market indicator: nobody advertises a job that doesn&rsquo;t exist, and nobody asks for work they don&rsquo;t need.</p>
-    <p>I pulled the counts for every thread from the HN Algolia API and checked the pairs back to 2014. In 143 months, seeker comments never once outnumbered hiring comments. In 2026 they did.</p>
+    <p>Every month Hacker News runs two job threads. Companies post openings in &ldquo;Ask HN: Who is hiring?&rdquo; and people looking for work post in &ldquo;Who wants to be hired?&rdquo;.</p>
+    <p>I counted the comments in every thread and checked the pairs back to 2014. In 143 months, seeker comments never once outnumbered hiring comments. In 2026 they did.</p>
   </div>
 
   <figure>
@@ -76,7 +76,7 @@
   </figure>
 
   <div class="text">
-    <p>The timeline is the part most retellings get wrong. Hiring comments fell 35% during 2022, months before ChatGPT launched. The break came in July 2022, right after the Fed&rsquo;s first 75-basis-point hike since 1994 and the big-tech hiring freezes. And the Fed has been cutting since September 2024 with no rebound at all. The decline didn&rsquo;t start with AI. The missing recovery is where AI becomes the suspect.</p>
+    <p>The drop tracks Fed rates, not AI. Hiring fell 35% during 2022, before ChatGPT launched, and none of the AI releases marked on the chart left a visible break.</p>
   </div>
 
   <figure>
@@ -95,7 +95,7 @@
     <p>The threads aren&rsquo;t dying, which would be the boring explanation. Both threads together have held near 11&ndash;13k comments a year since 2019. What changed is who shows up. Job seekers wrote 19% of the comments in 2021. This year they&rsquo;ve written 51%.</p>
 
     <div class="footer">
-      Comment counts are a proxy. One hiring comment can hide fifty openings, and HN skews senior and startup-heavy. The July 2026 thread is still accumulating, so today&rsquo;s numbers will drift up. Data, fetch script, and chart code: <a href="https://github.com/ej29-r3d/hn-hiring-crossover">github.com/ej29-r3d/hn-hiring-crossover</a>.
+      Comment counts are a proxy: one hiring comment can hide fifty openings, and HN skews senior and startup-heavy. Data and chart code: <a href="https://github.com/ej29-r3d/hn-hiring-crossover">github.com/ej29-r3d/hn-hiring-crossover</a>.
     </div>
   </div>
 
