@@ -81,7 +81,9 @@
   var el = document.getElementById("content");
   var md;
   try {
-    var res = await fetch("article.md");
+    // no-store beats GitHub Pages' 10-minute cache so text edits show up
+    // on a normal reload; charts and libraries stay cached as usual.
+    var res = await fetch("article.md?v=" + Date.now(), { cache: "no-store" });
     if (!res.ok) throw new Error(res.status);
     md = await res.text();
   } catch (e) {
